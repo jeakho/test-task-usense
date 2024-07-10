@@ -1,0 +1,12 @@
+header {
+    background: blue;
+    display: flex;
+    align-items: center;
+    padding-left: 20px;
+    height: 100px;
+}
+
+h2 {
+    color: rgb(225, 225, 225);
+    margin: 0 40px 0 0;
+}
