@@ -2,12 +2,14 @@
     width: 100%;
     height: 100%;
     display: flex;
+    flex-direction: column;
     justify-content: center;
+    align-items: center;
 }
 
 .currency-converter__container {
     width: 50%;
-    height: 100%;
+    flex-grow: 1;
     padding: 20px;
     display: flex;
     flex-direction: column;

@@ -1,11 +1,8 @@
-import { Component, OnInit } from '@angular/core';
-import { Currency } from '../shared/currency';
-import { CurrencyService } from '../currency.service';
-
-
-function convertCurrencyValueToString(value: number) {
-  return String(parseFloat(value.toFixed(4)));
-}
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Currency } from './model/currency';
+import { CurrencyService } from './service/currency.service';
+import { ReplaySubject, Subject, takeUntil, withLatestFrom, take } from 'rxjs';
+import { CurrencyData } from './model/currencyData';
 
 
 @Component({
@@ -13,47 +10,71 @@ function convertCurrencyValueToString(value: number) {
   templateUrl: './currency-converter.component.html',
   styleUrl: './currency-converter.component.css'
 })
-export class CurrencyConverterComponent implements OnInit {
-  availableCurrencies = Object.keys(Currency);
+export class CurrencyConverterComponent implements OnInit, OnDestroy {
+  firstCurrencyData$$ = new ReplaySubject<CurrencyData>(1);
+  secondCurrencyData$$ = new ReplaySubject<CurrencyData>(1);
 
-  currency1: string = this.availableCurrencies[1];
-  currencyValue1: string = '1';
-  currency2: string = this.availableCurrencies[0];
-  currencyValue2!: string;
+  firstCurrencyDataModified$$ = new Subject<CurrencyData>();
+  secondCurrencyDataModified$$ = new Subject<CurrencyData>();
+
+  private availableCurrencies = Object.keys(Currency);
+  private destroy$$ = new Subject<boolean>();
 
   constructor(private readonly currencyService: CurrencyService) {}
 
-  async handleFirstCurrencyValueChange(newValue: string) {
-    this.currencyValue1 = newValue;
-    if (!newValue || newValue === '.') {
-      this.currencyValue2 = '';
-      return;
-    }
 
-    this.currencyValue2 = convertCurrencyValueToString(await this.currencyService.convert(+newValue, Currency[this.currency1], Currency[this.currency2]));
+  initialize() {
+    const firstCurrencyData = { currency: this.availableCurrencies[1], currencyAmount: '1' }
+
+    this.currencyService.convert(+firstCurrencyData.currencyAmount, Currency[firstCurrencyData.currency], Currency[this.availableCurrencies[0]]).pipe(
+      take(1)
+    ).subscribe(secondCurrencyAmount => (
+      this.firstCurrencyData$$.next(firstCurrencyData),
+      this.secondCurrencyData$$.next({ currencyAmount: this.convertCurrencyAmountToString(secondCurrencyAmount), currency: this.availableCurrencies[0] })
+    ));
   }
 
-  async handleFirstCurrencyChange(newValue: string) {
-    this.currency1 = newValue;
-    this.currencyValue2 = convertCurrencyValueToString(await this.currencyService.convert(+this.currencyValue1, Currency[newValue], Currency[this.currency2]));
-  }
-
-  async handleSecondCurrencyValueChange(newValue: string) {
-    this.currencyValue2 = newValue;
-    if (!newValue || newValue === '.') {
-      this.currencyValue1 = '';
-      return;
-    }
-
-    this.currencyValue1 = convertCurrencyValueToString(await this.currencyService.convert(+newValue, Currency[this.currency2], Currency[this.currency1]));
-  }
-
-  async handleSecondCurrencyChange(newValue: string) {
-    this.currency2 = newValue;
-    this.currencyValue1 = convertCurrencyValueToString(await this.currencyService.convert(+this.currencyValue2, Currency[newValue], Currency[this.currency1]));
-  }
 
   ngOnInit(): void {
-    this.handleFirstCurrencyValueChange('1');
+    this.firstCurrencyDataModified$$.pipe(
+      withLatestFrom(this.secondCurrencyData$$),
+      takeUntil(this.destroy$$)
+    ).subscribe(([firstCurrencyData, secondCurrencyData]) => (
+      this.updateCurrencyData(firstCurrencyData, secondCurrencyData, this.secondCurrencyData$$) 
+    ));
+
+    this.secondCurrencyDataModified$$.pipe(
+      withLatestFrom(this.firstCurrencyData$$),
+      takeUntil(this.destroy$$)
+    ).subscribe(([secondCurrencyData, firstCurrencyData]) => (
+      this.updateCurrencyData(secondCurrencyData, firstCurrencyData, this.firstCurrencyData$$)
+    ))
+
+    this.initialize();
+  }
+
+  private updateCurrencyData (currencyDataFrom: CurrencyData, currencyDataTo: CurrencyData, currencyDataSubject: Subject<CurrencyData>) {
+    const { currency: fromCurrency, currencyAmount: fromCurrencyAmount } = currencyDataFrom;
+    const { currency: toCurrency } = currencyDataTo;
+
+    if (!fromCurrencyAmount || fromCurrencyAmount === '.') {
+      currencyDataSubject.next({ currencyAmount: '', currency: toCurrency });
+      return;
+    }
+
+    this.currencyService.convert(+fromCurrencyAmount, Currency[fromCurrency], Currency[toCurrency]).pipe(
+      take(1)
+    ).subscribe(toCurrencyAmount => (
+      currencyDataSubject.next({ currency: toCurrency, currencyAmount: this.convertCurrencyAmountToString(toCurrencyAmount) })
+    ))
+  }
+
+  private convertCurrencyAmountToString(currencyAmountNumber: number): string {
+    return String(parseFloat(currencyAmountNumber.toFixed(4)));
+  }
+
+
+  ngOnDestroy(): void {
+    this.destroy$$.next(true);
   }
 }

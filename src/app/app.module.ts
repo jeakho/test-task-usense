@@ -3,9 +3,8 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppComponent } from './app.component';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { SharedModule } from './shared/shared.module';
-import { HeaderModule } from './header/header.module';
 import { CurrencyConverterModule } from './currency-converter/currency-converter.module';
+import { CommonModule } from '@angular/common';
 
 @NgModule({
   declarations: [
@@ -13,8 +12,7 @@ import { CurrencyConverterModule } from './currency-converter/currency-converter
   ],
   imports: [
     BrowserModule,
-    SharedModule,
-    HeaderModule,
+    CommonModule,
     CurrencyConverterModule,
     CurrencyConverterModule
   ],

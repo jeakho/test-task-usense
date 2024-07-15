@@ -1,16 +1,15 @@
 <div class="currency-converter__wrapper">
+    <app-header style="width: 100%"></app-header>
     <div  class="currency-converter__container">
         <app-currency-input 
-            [initialValue]="currencyValue1" 
-            [initialCurrency]="currency1"
-            (onCurrencyChange)="handleFirstCurrencyChange($event)"
-            (onValueChange)="handleFirstCurrencyValueChange($event)"
+            [currencyData$$]="firstCurrencyData$$"
+            [currencyDataModified$$]="firstCurrencyDataModified$$"
+            str="FIRST CURRENCY INPUT"
         ></app-currency-input>
         <app-currency-input 
-            [initialValue]="currencyValue2" 
-            [initialCurrency]="currency2"
-            (onCurrencyChange)="handleSecondCurrencyChange($event)"
-            (onValueChange)="handleSecondCurrencyValueChange($event)"
+            [currencyData$$]="secondCurrencyData$$"
+            [currencyDataModified$$]="secondCurrencyDataModified$$"
+            str="SECOND CURRENCY INPUT"
         ></app-currency-input>
     </div>
 </div>
