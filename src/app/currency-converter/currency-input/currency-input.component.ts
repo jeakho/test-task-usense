@@ -15,7 +15,7 @@ export class CurrencyInputComponent implements OnInit, OnDestroy {
   @Input() currencyData$$!: Subject<CurrencyData>;
   
   currencyFormGroup!: FormGroup;
-  private destroy$: Subject<boolean> = new Subject();
+  private destroy$$: Subject<boolean> = new Subject();
 
   ngOnInit(): void {
     this.currencyFormGroup = new FormGroup({
@@ -24,7 +24,7 @@ export class CurrencyInputComponent implements OnInit, OnDestroy {
     });
 
     this.currencyFormGroup.valueChanges.pipe(
-      takeUntil(this.destroy$),
+      takeUntil(this.destroy$$),
     ).subscribe(data => this.currencyData$$.next(data));
 
     this.currencyData$$.subscribe(data => (
@@ -36,6 +36,7 @@ export class CurrencyInputComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-      this.destroy$.next(true);
+      this.destroy$$.next(true);
+      this.destroy$$.complete();
   }
 }
