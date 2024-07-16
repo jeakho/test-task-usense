@@ -1,14 +1,14 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { Currency } from '../model/currency';
 import { BehaviorSubject, map, tap, filter, firstValueFrom, Observable, of } from 'rxjs';
 import { pick } from 'lodash';
 
 @Injectable()
-export class CurrencyService {
+export class CurrencyService implements OnDestroy {
   private availableCurrencies = Object.keys(Currency);
 
-  private exchangeRates$ = new BehaviorSubject<number[][] | null>(null);
+  private exchangeRates$$ = new BehaviorSubject<number[][] | null>(null);
 
   constructor(private readonly httpClient: HttpClient) {
     this.initializeExchangeRates();
@@ -25,23 +25,27 @@ export class CurrencyService {
         ))
       )))
     ).subscribe(() => {
-      this.exchangeRates$.next(exchangeRates);
+      this.exchangeRates$$.next(exchangeRates);
     });
   }
 
   getExchangeRate(base: number, target: number): Observable<number> {
-    return this.exchangeRates$.pipe(
+    return this.exchangeRates$$.pipe(
       filter(val => !!val),
       map(rates => (rates as number[][])[base][target]),
     );
   }
 
   convert(fromValue: number, fromCurrency: number, toCurrency: number): Observable<number> {
-    return this.exchangeRates$.pipe(
+    return this.exchangeRates$$.pipe(
       filter(val => !!val),
       map(exchangeRates => (
         fromValue * (exchangeRates as number[][])[fromCurrency][toCurrency]
       ))
     )
+  }
+
+  ngOnDestroy(): void {
+      this.exchangeRates$$.complete();
   }
 }

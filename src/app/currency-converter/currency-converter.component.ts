@@ -76,5 +76,8 @@ export class CurrencyConverterComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$$.next(true);
     this.destroy$$.complete();
+
+    this.firstCurrencyData$$.complete();
+    this.secondCurrencyData$$.complete();
   }
 }
