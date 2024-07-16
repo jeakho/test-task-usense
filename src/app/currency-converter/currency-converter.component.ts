@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Currency } from './model/currency';
 import { CurrencyService } from './service/currency.service';
-import { ReplaySubject, Subject, takeUntil, withLatestFrom, take } from 'rxjs';
+import { ReplaySubject, Subject, takeUntil, withLatestFrom, take, distinctUntilChanged } from 'rxjs';
 import { CurrencyData } from './model/currencyData';
 
 
@@ -13,9 +13,6 @@ import { CurrencyData } from './model/currencyData';
 export class CurrencyConverterComponent implements OnInit, OnDestroy {
   firstCurrencyData$$ = new ReplaySubject<CurrencyData>(1);
   secondCurrencyData$$ = new ReplaySubject<CurrencyData>(1);
-
-  firstCurrencyDataModified$$ = new Subject<CurrencyData>();
-  secondCurrencyDataModified$$ = new Subject<CurrencyData>();
 
   private availableCurrencies = Object.keys(Currency);
   private destroy$$ = new Subject<boolean>();
@@ -36,14 +33,16 @@ export class CurrencyConverterComponent implements OnInit, OnDestroy {
 
 
   ngOnInit(): void {
-    this.firstCurrencyDataModified$$.pipe(
+    this.firstCurrencyData$$.pipe(
+      distinctUntilChanged((prev, cur) => prev.currency === cur.currency && prev.currencyAmount === cur.currencyAmount),
       withLatestFrom(this.secondCurrencyData$$),
       takeUntil(this.destroy$$)
     ).subscribe(([firstCurrencyData, secondCurrencyData]) => (
       this.updateCurrencyData(firstCurrencyData, secondCurrencyData, this.secondCurrencyData$$) 
     ));
 
-    this.secondCurrencyDataModified$$.pipe(
+    this.secondCurrencyData$$.pipe(
+      distinctUntilChanged((prev, cur) => prev.currency === cur.currency && prev.currencyAmount === cur.currencyAmount),
       withLatestFrom(this.firstCurrencyData$$),
       takeUntil(this.destroy$$)
     ).subscribe(([secondCurrencyData, firstCurrencyData]) => (

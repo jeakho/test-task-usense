@@ -17,8 +17,7 @@ export class CurrencyService {
   private initializeExchangeRates() {
     const exchangeRates = Array(this.availableCurrencies.length).fill(0).map(() => Array(this.availableCurrencies.length).fill(0));
 
-    // this.httpClient.get('https://openexchangeRates.org/api/latest.json?app_id=c07f564e415b41bf962f1d2ce1edf71a').pipe(
-    of({ rates: { 'UAH': 41.02, 'EUR': 0.92, 'USD': 1 } }).pipe(
+    this.httpClient.get('https://openexchangeRates.org/api/latest.json?app_id=c07f564e415b41bf962f1d2ce1edf71a').pipe(
       map(({ rates }: any) => pick(rates, Object.keys(Currency))),
       tap((rates: { [key: string]: number }) => Object.keys(Currency).forEach(baseCurrency => (
         Object.keys(rates).forEach(targetCurrency => (
